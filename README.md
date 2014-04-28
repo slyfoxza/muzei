@@ -1,6 +1,8 @@
 Muzei Live Wallpaper
 ====================
 
+**Note:** This fork of Muzei contains the synchronisation fix from [pull request #37](https://github.com/romannurik/muzei/pull/37) to address `ConcurrentModificationException`-related crashes in plugins. The API subproject has been updated to publish the artifact to a local Maven repository, with a qualified version of `1.0.1-slyfox-01`.
+
 <img src="http://api.muzei.co/static/hero.jpg" width="400" align="right" hspace="20">
 
 *A living museum for your Android home screen.*

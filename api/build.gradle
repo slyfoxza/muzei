@@ -15,13 +15,14 @@
  */
 import org.gradle.api.artifacts.maven.MavenDeployment
 
-apply plugin: 'maven'
-apply plugin: 'signing'
+apply plugin: 'maven-publish'
+// FIXME: Disabling signing plugin for temporary fork
+// apply plugin: 'signing'
 apply plugin: 'java'
 
 jar.baseName = 'muzei-api'
 group = 'com.google.android.apps.muzei'
-version = '1.0'
+version = '1.0.1-slyfox-01' // FIXME: Qualified version number for temporary fork
 
 def Properties props = new Properties()
 props.load(new FileInputStream(file('../local.properties')))
@@ -44,9 +45,12 @@ sourceSets {
     }
 }
 
+/* FIXME: The javadoc task is broken on Windows build environments
 task javadoc(type: Exec, overwrite: true, dependsOn: 'jar') {
     commandLine './javadoc-scripts/generate_javadoc.sh'
 }
+*/
+task javadoc(overwrite: true, dependsOn: 'jar') { }
 
 task javadocJar(type: Jar, dependsOn: javadoc) {
     classifier = 'javadoc'
@@ -71,52 +75,53 @@ dependencies {
 }
 
 // http://jedicoder.blogspot.com/2011/11/automated-gradle-project-deployment-to.html
-// TODO: switch to http://www.gradle.org/docs/current/userguide/publishing_maven.html
 
+/* FIXME: Disabling signing plugin for temporary fork
 signing {
     sign configurations.archives
 }
+*/
 
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+publishing {
+    publications {
+        muzeiAPI(MavenPublication) {
+            artifactId jar.baseName
 
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: props["sonatypeUsername"], password: props["sonatypePassword"])
+            from components.java
+
+            /*
+            FIXME: The javadoc task is broken on Windows build environments
+            artifact javadocJar {
+                classifier 'javadoc'
+            }
+            */
+            artifact sourcesJar {
+                classifier 'sources'
             }
 
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: props["sonatypeUsername"], password: props["sonatypePassword"])
+            pom.withXml {
+                def pom = asNode()
+                pom.appendNode 'name', 'Muzei API'
+                pom.appendNode 'packaging', 'jar'
+                pom.appendNode 'description', 'The Muzei API allows you to extend Muzei with custom sources'
+                pom.appendNode 'url', 'http://api.muzei.co'
+
+                def scm = pom.appendNode 'scm'
+                scm.appendNode 'url', 'https://github.com/romannurik/muzei.git'
+                scm.appendNode 'connection', 'scm:git:https://github.com/romannurik/muzei'
+                scm.appendNode 'developerConnection', 'scm:git:https://github.com/romannurik/muzei'
+
+                def licenses = pom.appendNode 'licenses'
+                def license = licenses.appendNode 'license'
+                license.appendNode 'name', 'The Apache Software License, Version 2.0'
+                license.appendNode 'url', 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                license.appendNode 'distribution', 'repo'
+
+                def developers = pom.appendNode 'developers'
+                def developer = developers.appendNode 'developer'
+                developer.appendNode 'id', 'romannurik'
+                developer.appendNode 'name', 'Roman Nurik'
             }
-
-            pom.project {
-               name 'Muzei API'
-               packaging 'jar'
-               description 'The Muzei API allows you to extend Muzei with custom sources'
-               url 'http://api.muzei.co'
-
-               scm {
-                   url 'https://github.com/romannurik/muzei.git'
-                   connection 'scm:git:https://github.com/romannurik/muzei'
-                   developerConnection 'scm:git:https://github.com/romannurik/muzei'
-               }
-
-               licenses {
-                   license {
-                       name 'The Apache Software License, Version 2.0'
-                       url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
-                       distribution 'repo'
-                   }
-               }
-
-               developers {
-                   developer {
-                       id 'romannurik'
-                       name 'Roman Nurik'
-                   }
-               }
-           }
         }
     }
 }
