@@ -24,6 +24,8 @@ jar.baseName = 'muzei-api'
 group = 'com.google.android.apps.muzei'
 version = '1.0.1-slyfox-01' // FIXME: Qualified version number for temporary fork
 
+sourceCompatibility = '1.6'
+
 def Properties props = new Properties()
 props.load(new FileInputStream(file('../local.properties')))
 
